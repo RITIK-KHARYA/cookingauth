@@ -3,10 +3,10 @@
 import { getUser } from "../data/_user";
 import { SigninSchema } from "@/lib/Validation";
 import db from "@/lib/prisma";
+import { createSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 export default async function Signin(state: any, formData: FormData) {
-  const user = getUser();
   const validatedResult = SigninSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -14,39 +14,24 @@ export default async function Signin(state: any, formData: FormData) {
   if (!validatedResult.success) {
     console.log(validatedResult.error.flatten().fieldErrors);
     return {
-      errors: validatedResult.error.flatten().fieldErrors,
+      errors: "invalied email or password",
     };
   }
 
-  if (!user) {
-    console.log("user not found");
-    redirect("/sign-up");
+  const { email, password } = validatedResult.data;
+
+  const data = await db.user.findUnique({
+    where: { email },
+  });
+
+  if (!data) {
+    return { errors: "invalied email" };
   }
+  const isValidated = await Bun.password.verify(password, data.password);
+  if (!isValidated) {
+    return { errors: "wrong password" };
+  }
+
+  await createSession(data.userId);
   redirect("/dashboard");
 }
-
-// import { SigninSchema } from "@/lib/Validation";
-// import db from "@/lib/prisma";
-// import { redirect } from "next/dist/server/api-utils";
-// import { root } from "postcss";
-
-// export default async function Signin(state: any, formData: FormData) {
-//   const validateResult = SigninSchema.safeParse({
-//     email: formData.get("email"),
-//     password: formData.get("password"),
-//   });
-//   if (!validateResult.success) {
-//     console.log("pussy error");
-//     return { errors: validateResult.error.flatten().fieldErrors };
-//   }
-//   const { email, password } = validateResult.data;
-//   const data = await db.user.findUnique({
-//     where: {
-//       password: password,
-//       email: email,
-//     },
-//   });
-//   if (!data) {
-//     return { errors: "invalied email or password" };
-//   }
-// }

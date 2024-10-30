@@ -32,10 +32,10 @@ export async function encrypt(payload: Payload) {
 
 export async function decrypt(session: string | undefined = "") {
   try {
-    const { payload } = await jwtVerify(session, key, {
+    const { payload} = await jwtVerify(session, key, {
       algorithms: ["HS256"],
     });
-    return payload;
+    return payload as Payload;
   } catch (error) {
     console.log(error);
   }

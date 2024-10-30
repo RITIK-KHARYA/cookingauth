@@ -2,13 +2,9 @@ import db from "@/lib/prisma";
 import { VerifySession } from "@/lib/session";
 import { cache } from "react";
 
+
 export const getUser = cache(async () => {
   const session = await VerifySession();
-  console.log(session.userId);
-
-  if (!session.userId) {
-    return null;
-  }
 
   const data = await db.user.findUnique({
     where: {

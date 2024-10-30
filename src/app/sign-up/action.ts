@@ -4,6 +4,7 @@ import { SignupSchema } from "@/lib/Validation";
 import db from "@/lib/prisma";
 import { createSession } from "@/lib/session";
 
+
 export async function Signup(state: any, formData: FormData) {
   const validatedResult = SignupSchema.safeParse({
     name: formData.get("name"),
@@ -17,11 +18,12 @@ export async function Signup(state: any, formData: FormData) {
     };
   }
   const { name, email, password } = validatedResult.data;
+  const hashedPassword = await Bun.password.hash(password);
   const data = await db.user.create({
     data: {
       name,
       email,
-      password: password,
+      password: hashedPassword,
     },
   });
   await createSession(data.userId);
